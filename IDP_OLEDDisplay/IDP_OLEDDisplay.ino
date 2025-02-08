@@ -9,10 +9,43 @@
 
 Adafruit_SSD1306 screen(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET_PIN);
 void setup() {
-  // put your setup code here, to run once:
+  /*
+  Wire.begin();
+  Serial.begin(9600);
+  Serial.println("Scanning...");
+  for (byte i = 8; i < 120; i++) {
+    Wire.beginTransmission(i);
+    if (Wire.endTransmission() == 0) {
+      Serial.print("I2C device found at 0x");
+      Serial.println(i, HEX);
+    }
+    delay(10);
+  }
+  */
+  
+  Serial.begin(9600);
+  Serial.println("Initializing OLED...");
+  /*
+  if (!screen.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println("SSD1306 initialization failed!");
+    while (true);
+  }
+  */
   screen.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
-
+  Serial.println("SSD1306 initialization successfully!");
+  delay(100);
+  delay(100);
+  screen.display();
+  delay(300);
   screen.clearDisplay();
+  screen.display();
+  screen.setTextSize(1);
+  screen.setTextColor(SSD1306_WHITE);
+  screen.setCursor(0, 0);
+
+  screen.print("Tempurature:");
+  screen.display();
+  
 }
 
 void loop() {
