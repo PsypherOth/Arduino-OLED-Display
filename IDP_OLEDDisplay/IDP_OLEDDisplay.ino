@@ -1,11 +1,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
-#define OLED_RESET_PIN -1
-#define SCREEN_ADDRESS 0x3C
+#include "OLEDDisplay.h"
 
 Adafruit_SSD1306 screen(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET_PIN);
 void setup() {
@@ -41,8 +37,31 @@ void setup() {
 
 }
 
+int measurePeakToPeak(int pin) {
+  int signalMax = 0;
+  int signalMin = 1023;
+
+  unsigned long start = millis();
+  while (millis() - start < 50) { // 50 ms sample window
+    int val = analogRead(pin);
+    if (val > signalMax) signalMax = val;
+    if (val < signalMin) signalMin = val;
+  }
+  return signalMax - signalMin;
+}
+
 void loop() {
-  // put your main code here, to run repeatedly:
+  int bassP2P = measurePeakToPeak(BASS_PIN);
+  int midP2P = measurePeakToPeak(MID_PIN);
+  int trebleP2P = measurePeakToPeak(TREBLE_PIN);
+
+  int maxP2P = 1023;
+  int barHeight = 35; 
+
+  int bassHeight = map(bassP2P, 0, maxP2P, 0, barHeight);
+  int midHeight = map(midP2P, 0, maxP2P, 0, barHeight);
+  int trebleHeight = map(trebleP2P, 0, maxP2P, 0, barHeight);
+
   screen.setTextSize(1);
   screen.setTextColor(SSD1306_WHITE);
   screen.setCursor(20, 0);
@@ -51,19 +70,21 @@ void loop() {
   screen.print("Spectrogram");
 
   int barWidth = 20;
-  int barHeight = 35;         // All bars same height
   int baseY = 55;             // Bottom of all bars
+  int spacing = 10;
 
   // MID bar centered, others spaced evenly
   int xMid = (SCREEN_WIDTH - barWidth) / 2;
-  int spacing = 10;
   int xBass = xMid - barWidth - spacing;
   int xTreble = xMid + barWidth + spacing;
 
   // --- Draw Bars ---
   screen.drawRect(xBass, baseY - barHeight, barWidth, barHeight, SSD1306_WHITE);     // BASS
+  screen.fillRect(xBass + 1, baseY - bassHeight + 1, barWidth - 2, bassHeight - 2, SSD1306_WHITE);
   screen.drawRect(xMid, baseY - barHeight, barWidth, barHeight, SSD1306_WHITE);      // MID
+  screen.fillRect(xMid + 1, baseY - midHeight + 1, barWidth - 2, midHeight - 2, SSD1306_WHITE);
   screen.drawRect(xTreble, baseY - barHeight, barWidth, barHeight, SSD1306_WHITE);   // TREBLE
+  screen.fillRect(xTreble + 1, baseY - trebleHeight + 1, barWidth - 2, trebleHeight - 2, SSD1306_WHITE);
 
   // --- Labels ---
   screen.setCursor(xBass - 1, baseY + 2);
